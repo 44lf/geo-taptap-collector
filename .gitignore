@@ -4,3 +4,10 @@ targets.json
 .pytest_cache/
 .test-tmp*/
 __pycache__/
+
+# Windows Spike deployment kit: keep scripts, never commit binaries or runtime transfer data.
+ops/windows-spike/*.last.log
+ops/windows-spike/*.transfer.*
+ops/windows-spike/mc*.exe
+ops/windows-spike/python-*.exe
+ops/windows-spike/taptap-import-wheelhouse/
