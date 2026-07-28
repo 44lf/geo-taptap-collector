@@ -1,93 +1,138 @@
-# geo-taptap-collector
+# GEO TapTap Collector
 
+面向 Windows Server 的独立 TapTap 游戏资料采集器。它读取一份最多 20 个游戏的显式
+目标清单，采集游戏元数据、图标和截图，并生成带 SHA-256 完整性清单的离线 bundle，
+供 GEO 生产侧校验和幂等导入。
 
+> 仅用于已获得授权的数据采集。禁止用于代理轮换、指纹伪装、绕过访问控制或规避限流。
+> Collector 遇到 HTTP `403`、`405` 或 `429` 会立即停止整轮任务。
 
-## Getting started
+## 为什么独立仓库
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- Windows Collector 不需要 GEO 源码、Python、MySQL 或 MinIO 凭据。
+- 生产 GEO 不实时依赖公司网络，只消费版本化 bundle。
+- TapTap 网络协议变化和 Windows 运行环境可以独立发布、回滚。
+- 生产自动游戏来源仍由 GEO 自己管理，本仓库不修改生产 scheduler。
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+```text
+GEO 生产导出 targets.json
+            │
+            ▼
+Windows Collector
+            │ bundle schema v1
+            ▼
+GEO bundle importer → MySQL + MinIO
 ```
-cd existing_repo
-git remote add origin https://hlgit.5518game.com/geo/geo-taptap-collector.git
-git branch -M main
-git push -uf origin main
+
+## 环境要求
+
+- Windows PowerShell 5.1 或更高版本。
+- 能直接访问 TapTap HTTPS 服务和图片 CDN。
+- 不需要安装 Python。
+- 操作者已确认组织与 TapTap 的授权边界。
+
+## 快速开始
+
+1. 将 `targets.example.json` 复制为 `targets.json`。
+2. 使用 GEO 生产导出的真实 `target_game_id`、`category_id` 和游戏名称替换示例。
+3. 双击 `run-collector.cmd`。
+4. 在 `output/<bundle_id>/report.json` 检查状态。
+5. 将整个 bundle 目录交给 GEO importer；不要只复制 `manifest.json`。
+
+目标清单示例：
+
+```json
+{
+  "schema_version": 1,
+  "bundle_id": "taptap-stability-20260728",
+  "max_screenshots": 3,
+  "delay_seconds": 30,
+  "targets": [
+    {
+      "target_game_id": 101,
+      "name": "原神",
+      "category_id": 501,
+      "icon_local": false
+    }
+  ]
+}
 ```
 
-## Integrate with your tools
+约束：
 
-* [Set up project integrations](https://hlgit.5518game.com/geo/geo-taptap-collector/-/settings/integrations)
+- `targets` 必须包含 1–20 个唯一目标。
+- `target_game_id` 是 GEO 生产数据库的游戏行 ID，不是 TapTap 游戏 ID。
+- 搜索只接受标题完全相同的 `brand` 结果，不使用模糊命中。
+- `max_screenshots` 范围是 0–6。
+- `delay_seconds` 范围是 0–3600；稳定性测试建议 30 秒。
+- 相同 `bundle_id` 重跑会跳过 checkpoint 中已成功的目标。
 
-## Collaborate with your team
+## 输出
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```text
+output/<bundle_id>/
+├── checkpoint.json
+├── manifest.json
+├── report.json
+└── games/<target_game_id>/
+    ├── game.json
+    └── images/
+        ├── icon.png
+        └── screenshot-01.jpg
+```
 
-## Test and Deploy
+`manifest.json` 使用 bundle schema v1。每个文件记录：
 
-Use the built-in continuous integration in GitLab.
+- POSIX 风格相对路径；
+- 字节数；
+- SHA-256；
+- MIME 类型；
+- 角色（`game`、`icon`、`screenshot`）；
+- 图片来源 URL。
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+详细契约见 [docs/bundle-schema-v1.md](docs/bundle-schema-v1.md)。
 
-***
+`report.json` 记录公网出口 IP、每阶段 HTTP 状态与耗时、目标结果和阻断状态，但不会保存
+Cookie、XSRF token 或生产凭据。
 
-# Editing this README
+## 退出码
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+- `0`：本轮没有失败或阻断。
+- `1`：manifest 或启动参数无效。
+- `2`：至少一个普通目标失败，但未遇到阻断状态。
+- `3`：遇到 `403/405/429`，整轮已停止。
 
-## Suggestions for a good README
+## 断点续跑
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Collector 每成功完成一个目标就更新 `checkpoint.json`。相同 `bundle_id` 重跑时：
 
-## Name
-Choose a self-explaining name for your project.
+- 成功目标直接跳过；
+- miss 和普通 error 目标重新尝试；
+- 发生阻断时不继续后续目标。
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+若需要重新做一轮独立稳定性测试，请使用新的 `bundle_id`。
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## 开发验证
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+运行时没有第三方依赖。开发测试需要 Windows、Python 和 pytest：
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+```powershell
+python -m pip install -r requirements-dev.txt
+pytest -q
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+测试通过真实 `powershell.exe` 执行离线 fixture，覆盖：
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- 20 游戏上限；
+- 精确标题匹配；
+- `403/405/429` 阻断停机；
+- checkpoint 断点续跑；
+- bundle 文件清单和 SHA-256；
+- 输出不泄露会话 secret。
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## 安全边界
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- 本仓库不得出现生产数据库、MinIO、SSH 或 API 凭据。
+- 不提交 `targets.json`、`output/` 或运行日志。
+- 不开放入站服务；传输由操作者复制 bundle 或后续使用短时预签名对象存储 URL。
+- GEO importer 必须先完整 dry-run 校验，再由生产操作者决定是否正式导入。

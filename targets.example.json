@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "bundle_id": "taptap-stability-20260728",
+  "max_screenshots": 3,
+  "delay_seconds": 30,
+  "targets": [
+    {
+      "target_game_id": 1,
+      "name": "原神",
+      "category_id": 1,
+      "icon_local": false
+    }
+  ]
+}
