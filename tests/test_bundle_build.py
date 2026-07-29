@@ -5,11 +5,13 @@ import io
 import json
 import tarfile
 from datetime import UTC, datetime
+from email.message import Message
 from pathlib import Path
+from types import SimpleNamespace
 
 import zstandard
 
-from geo_game_collector.bundle_build import build_bundle
+from geo_game_collector.bundle_build import build_bundle, default_media_fetcher
 from geo_game_collector.contracts import (
     CanonicalGameResult,
     CorrelationIds,
@@ -153,3 +155,51 @@ def test_blocked_result_preserves_bounded_raw_evidence_without_media(tmp_path: P
     assert item["normalized_path"] is None
     assert item["raw_evidence_paths"]
     assert item["media_paths"] == []
+
+
+def test_default_media_fetcher_uses_signature_when_cdn_header_is_wrong(monkeypatch):
+    webp = b"RIFF\x04\x00\x00\x00WEBPdata"
+    headers = Message()
+    headers["Content-Type"] = "image/jpeg"
+
+    class Response:
+        def __enter__(self):
+            return SimpleNamespace(
+                read=lambda _limit: webp,
+                headers=headers,
+            )
+
+        def __exit__(self, *_args):
+            return False
+
+    monkeypatch.setattr(
+        "geo_game_collector.bundle_build.urlopen",
+        lambda *_args, **_kwargs: Response(),
+    )
+
+    assert default_media_fetcher("https://img.test/game", 1024) == (
+        webp,
+        "image/webp",
+    )
+
+
+def test_default_media_fetcher_skips_non_image_body_despite_image_header(monkeypatch):
+    headers = Message()
+    headers["Content-Type"] = "image/png"
+
+    class Response:
+        def __enter__(self):
+            return SimpleNamespace(
+                read=lambda _limit: b"<html>blocked</html>",
+                headers=headers,
+            )
+
+        def __exit__(self, *_args):
+            return False
+
+    monkeypatch.setattr(
+        "geo_game_collector.bundle_build.urlopen",
+        lambda *_args, **_kwargs: Response(),
+    )
+
+    assert default_media_fetcher("https://img.test/game", 1024) is None

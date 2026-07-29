@@ -87,6 +87,20 @@ def _media_extension(media_type: str) -> str:
     }.get(media_type, ".bin")
 
 
+def _detect_image_media_type(data: bytes) -> str | None:
+    """Return the image type from bytes instead of trusting a CDN header."""
+
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if len(data) >= 12 and data.startswith(b"RIFF") and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    return None
+
+
 def default_media_fetcher(url: str, max_bytes: int) -> tuple[bytes, str] | None:
     request = Request(
         url,
@@ -95,13 +109,8 @@ def default_media_fetcher(url: str, max_bytes: int) -> tuple[bytes, str] | None:
     )
     with urlopen(request, timeout=20) as response:  # noqa: S310 - URLs come from approved sources
         data = response.read(max_bytes + 1)
-        media_type = str(response.headers.get_content_type()).lower()
-    if len(data) > max_bytes or media_type not in {
-        "image/png",
-        "image/jpeg",
-        "image/webp",
-        "image/gif",
-    }:
+    media_type = _detect_image_media_type(data)
+    if len(data) > max_bytes or media_type is None:
         return None
     return data, media_type
 
