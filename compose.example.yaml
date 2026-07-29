@@ -1,0 +1,31 @@
+services:
+  collector-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      GEO_COLLECTOR_GATEWAY_URL: https://geo.example.com/
+      GEO_COLLECTOR_ID: collector-local-1
+      GEO_COLLECTOR_CREDENTIAL_FILE: /run/secrets/collector-credential
+      GEO_COLLECTOR_DATA_DIR: /var/lib/geo-game-collector
+      GEO_COLLECTOR_TIMEZONE: Asia/Shanghai
+      GEO_COLLECTOR_POLL_SECONDS: "60"
+    secrets:
+      - collector-credential
+    volumes:
+      - collector-data:/var/lib/geo-game-collector
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+secrets:
+  collector-credential:
+    file: ./secrets/collector-credential.txt
+
+volumes:
+  collector-data:

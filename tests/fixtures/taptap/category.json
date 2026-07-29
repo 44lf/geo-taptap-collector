@@ -1,0 +1,42 @@
+{
+  "data": {
+    "list": [
+      {
+        "id": 45213,
+        "title": "心动小镇",
+        "identifier": "com.xd.xdt",
+        "itunes_id": "1513441374",
+        "stat": {
+          "rating": {
+            "score": 8.6
+          },
+          "review_count": 1234
+        },
+        "icon": {
+          "original_url": "https://img.example/category-icon.png"
+        },
+        "description": {
+          "text": "慢节奏<br/>生活模拟"
+        }
+      },
+      {
+        "id": 99901,
+        "title": "安卓限定游戏",
+        "identifier": "com.example.android",
+        "itunes_id": "",
+        "stat": {
+          "rating": {
+            "score": 7.2
+          },
+          "review_count": 12
+        },
+        "icon": {
+          "url": "https://img.example/android-icon.png"
+        },
+        "description": {
+          "text": "安卓平台"
+        }
+      }
+    ]
+  }
+}

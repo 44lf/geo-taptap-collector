@@ -1,0 +1,61 @@
+{
+  "data": {
+    "list": [
+      {
+        "list": [
+          {
+            "type": "moment",
+            "moment": {
+              "title": "原神攻略"
+            }
+          },
+          {
+            "type": "brand",
+            "brand": {
+              "app": {
+                "id": 555,
+                "title": "原神攻略站"
+              }
+            }
+          },
+          {
+            "type": "brand",
+            "brand": {
+              "app": {
+                "id": 168332,
+                "title": "原神",
+                "score": 7.9,
+                "identifier": "com.miHoYo.Yuanshen",
+                "tags": [
+                  {
+                    "value": "开放世界"
+                  },
+                  {
+                    "value": "二次元"
+                  }
+                ],
+                "supported_platforms": [
+                  {
+                    "key": "android"
+                  },
+                  {
+                    "key": "ios"
+                  },
+                  {
+                    "key": "pc"
+                  }
+                ],
+                "icon": {
+                  "original_url": "https://img.example/search-icon.png"
+                },
+                "description": {
+                  "text": "搜索结果简介"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,4 +1,32 @@
-# GEO TapTap Collector
+# GEO Game Collector
+
+当前主线是跨平台 Python Collector：在本地电脑运行百度、九游、应用宝、TapTap
+适配器，通过 GEO Gateway 领取 job、生成 Bundle schema v2、进入持久 spool，并由
+GEO Consumer 归一化后写入业务 MySQL/MinIO。它不直连生产数据库或业务对象存储。
+
+```text
+Local Python Collector
+  -> HTTPS Gateway + short-lived Inbox upload
+  -> durable transfer queue
+  -> GEO Consumer
+  -> existing GEO normalization/upsert/image services
+```
+
+安装和运行：
+
+```powershell
+python -m pip install .
+geo-game-collector configure --gateway-url https://geo.example.com/ --collector-id collector-local-1
+geo-game-collector credential set
+geo-game-collector doctor
+geo-game-collector run-now --mode refresh
+geo-game-collector agent
+```
+
+完整安装、日志、spool、升级、回滚、凭据轮换、Docker 和卸载流程见
+[Python Collector Phase 1 运维手册](docs/operator-runbook.md)。
+
+## Legacy Windows TapTap Spike
 
 面向 Windows Server 的独立 TapTap 游戏资料采集器。它读取一份最多 20 个游戏的显式
 目标清单，采集游戏元数据、图标和截图，并生成带 SHA-256 完整性清单的离线 bundle，
@@ -9,7 +37,7 @@
 
 ## 为什么独立仓库
 
-- Windows Collector 不需要 GEO 源码、Python、MySQL 或 MinIO 凭据。
+- Legacy Windows Spike 不需要 GEO 源码、Python、MySQL 或 MinIO 凭据。
 - 生产 GEO 不实时依赖公司网络，只消费版本化 bundle。
 - TapTap 网络协议变化和 Windows 运行环境可以独立发布、回滚。
 - 生产自动游戏来源仍由 GEO 自己管理，本仓库不修改生产 scheduler。
@@ -28,8 +56,11 @@ GEO bundle importer → MySQL + MinIO
 
 - Windows PowerShell 5.1 或更高版本。
 - 能直接访问 TapTap HTTPS 服务和图片 CDN。
-- 不需要安装 Python。
+- 现有 Windows TapTap Spike 不需要安装 Python。
 - 操作者已确认组织与 TapTap 的授权边界。
+
+跨平台 Python Collector 是当前工程化主线；`collector.ps1`、`run-collector.cmd` 和
+`ops/windows-spike/` 仅作为 legacy Spike 保留，不再作为日常运行入口。
 
 ## 快速开始
 
@@ -92,6 +123,17 @@ output/<bundle_id>/
 
 详细契约见 [docs/bundle-schema-v1.md](docs/bundle-schema-v1.md)。
 
+新增 Python Collector 使用 Bundle schema v2；其多来源、原始/归一化证据、完整文件
+清单、组件版本、archive 完整性和有界限制契约见
+[docs/bundle-schema-v2.md](docs/bundle-schema-v2.md)。现有 PowerShell Spike 继续使用
+v1。
+
+Python Collector 的本地 spool 会把 archive 复制到自身数据目录并重新校验字节数与
+SHA-256。`transport_id`、对象键和 archive 身份一旦建立即不可变；网络失败只递增持久化
+尝试状态，不重新采集或重新打包。只有收到 `transport_id` 与 archive SHA-256 都匹配的
+`PROCESSED` receipt，且超过保留宽限期，文件才会成为可清理候选；失败 receipt 和未确认
+archive 会继续保留。spool 达到数量或字节高水位时拒绝接收新 Bundle，不丢弃积压。
+
 `report.json` 记录公网出口 IP、每阶段 HTTP 状态与耗时、目标结果和阻断状态，但不会保存
 Cookie、XSRF token 或生产凭据。
 
@@ -119,6 +161,15 @@ Collector 每成功完成一个目标就更新 `checkpoint.json`。相同 `bundl
 ```powershell
 python -m pip install -r requirements-dev.txt
 pytest -q
+```
+
+Python Collector foundation 的可编辑安装及质量门禁：
+
+```powershell
+python -m pip install -e ".[dev]"
+pytest -q
+ruff check src tests
+mypy
 ```
 
 测试通过真实 `powershell.exe` 执行离线 fixture，覆盖：

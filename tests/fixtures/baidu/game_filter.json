@@ -1,0 +1,22 @@
+{
+  "result": {
+    "data": {
+      "gameList": [
+        {
+          "gameId": 123,
+          "gameName": "餐厅养成记",
+          "gameScore": "8.7",
+          "gameTags": ["经营", "养成"],
+          "gamePlatform": ["Android", "IOS"],
+          "commentCount": 42,
+          "gameIcon": "https://example.invalid/icon.png",
+          "gameOfficialPic": [
+            "https://example.invalid/1.jpg",
+            "https://example.invalid/2.jpg"
+          ],
+          "gameDesc": "开一家餐厅"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+.git
+.mypy_cache
+.ruff_cache
+.test-tmp*
+__pycache__
+*.pyc
+*.log
+output
+targets.json
+secrets
+ops/windows-spike
+tests

@@ -1,0 +1,17 @@
+{
+  "result": {
+    "data": [
+      {
+        "gameId": 1,
+        "gameName": "餐厅养成记",
+        "gameTypes": ["手游", "策略经营"],
+        "gameIcon": "https://example.invalid/icon.png"
+      },
+      {
+        "gameId": 2,
+        "gameName": "餐厅养成记2",
+        "gameTypes": ["手游"]
+      }
+    ]
+  }
+}

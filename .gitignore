@@ -4,6 +4,7 @@ targets.json
 .pytest_cache/
 .test-tmp*/
 __pycache__/
+*.egg-info/
 
 # Windows Spike deployment kit: keep scripts, never commit binaries or runtime transfer data.
 ops/windows-spike/*.last.log

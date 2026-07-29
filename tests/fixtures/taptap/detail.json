@@ -1,0 +1,50 @@
+{
+  "data": {
+    "app": {
+      "id": 168332,
+      "title": "原神",
+      "identifier": "com.miHoYo.Yuanshen",
+      "stat": {
+        "rating": {
+          "score": 7.9
+        },
+        "review_count": 100
+      },
+      "tags": [
+        {
+          "value": "开放世界"
+        },
+        {
+          "value": "二次元"
+        }
+      ],
+      "platform_info": {
+        "supported_platforms": [
+          {
+            "key": "android"
+          },
+          {
+            "key": "ios"
+          },
+          {
+            "key": "pc"
+          }
+        ]
+      },
+      "icon": {
+        "original_url": "https://img.example/detail-icon.png"
+      },
+      "screenshots": [
+        {
+          "original_url": "https://img.example/shot-01.jpg"
+        },
+        {
+          "url": "https://img.example/shot-02.jpg"
+        }
+      ],
+      "description": {
+        "text": "开放世界<br class=\"text\">冒险游戏"
+      }
+    }
+  }
+}
