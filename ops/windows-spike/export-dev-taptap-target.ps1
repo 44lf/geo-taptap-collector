@@ -65,6 +65,6 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "[3/3] Done."
 Write-Host ""
 Write-Host "DEV TARGET EXPORTED"
-Write-Host "Switch to 172.25.25.102 for the real collector run."
+Write-Host "Switch to 10.0.0.11 for the real collector run."
 Write-Host "No database password was written to the shared drive."
 Read-Host "Press Enter to close"

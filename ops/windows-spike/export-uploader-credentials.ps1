@@ -19,7 +19,7 @@ Copy-Item -LiteralPath $sourcePath -Destination $transferPath -Force
 
 Write-Host ""
 Write-Host "Uploader credentials are ready for transfer."
-Write-Host "Switch to the 172.25.25.102 collector server now."
+Write-Host "Switch to the 10.0.0.11 collector server now."
 Write-Host "On that server, run: install-and-test-minio-upload.cmd"
 Write-Host ""
 Write-Host "Do not open or send the credential file in chat."

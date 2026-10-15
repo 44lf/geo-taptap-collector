@@ -18,8 +18,8 @@ Over RDP drive redirection the same layout appears under `\\tsclient\E\`.
 
 ## Runtime boundary
 
-- Run DEV scripts on `172.25.20.57`.
-- Run collector/upload scripts on `172.25.25.102`.
+- Run DEV scripts on `10.0.0.10`.
+- Run collector/upload scripts on `10.0.0.11`.
 - Never send credential transfer files or `.last.log` files through chat.
 - `mc*.exe`, the Python installer, the wheelhouse, logs, and `*.transfer.*`
   files are local deployment artifacts and are ignored by Git.
@@ -30,12 +30,12 @@ Over RDP drive redirection the same layout appears under `\\tsclient\E\`.
 
 ## Proven manual sequence
 
-On DEV (`172.25.20.57`):
+On DEV (`10.0.0.10`):
 
 1. `create-minio-uploader.cmd`
 2. `export-uploader-credentials.cmd`
 
-On the collector (`172.25.25.102`):
+On the collector (`10.0.0.11`):
 
 3. `install-and-test-minio-upload.cmd`
 
